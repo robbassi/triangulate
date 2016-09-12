@@ -44,10 +44,10 @@ let intersect l1 l2 =
   let is_origin p = (l1.a = p || l1.b = p) && (l2.a = p || l2.b = p) in
   let is_within_bounds p =
     let distance p1 p2 =
-      (sqrt((float(p1.x - p2.x)**2. +. float(p1.y - p2.y)**2.)))
+      sqrt(float(p1.x - p2.x) ** 2. +. float(p1.y - p2.y) ** 2.)
     in
-    (int_of_float((distance l1.a p) +. (distance p l1.b)) = int_of_float(distance l1.a l1.b)) &&
-    (int_of_float((distance l2.a p) +. (distance p l2.b)) = int_of_float(distance l2.a l2.b))
+    (distance l1.a p) +. (distance p l1.b) -. (distance l1.a l1.b) < 1.0 &&
+    (distance l2.a p) +. (distance p l2.b) -. (distance l2.a l2.b) < 1.0
   in
   let (l10,l11,l12) = coefficients l1 in
   let (l20,l21,l22) = coefficients l2 in
@@ -107,10 +107,9 @@ let triangulate points =
 (* main entry point *)
 let run () =
   let open Graphics in
-  (* let points = [{x=10;y=10};{x=10;y=100};{x=50;y=75};{x=60;y=10};{x=100;y=100};{x=150;y=50}] in *)
   let points = ref [] in
   while true do
-    let lines = triangulate !points in
+    let lines = ref (triangulate !points) in
 
     (* create window that can fit all the points *)
     !points
@@ -126,13 +125,13 @@ let run () =
     List.iter (fun ({a;b} : line) ->
         moveto a.x a.y;
         lineto b.x b.y)
-      lines;
+      !lines;
 
     (* draw labels *)
-    List.iter (fun {x;y} ->
-        moveto (x - 5) (y - 5);
-        draw_string (Printf.sprintf "(%d,%d)" x y))
-      !points;
+    (* List.iter (fun {x;y} -> *)
+    (*     moveto (x - 5) (y - 5); *)
+    (*     draw_string (Printf.sprintf "(%d,%d)" x y)) *)
+    (*   !points; *)
 
     let status = wait_next_event [Button_up] in
     points := !points @ [{x=status.mouse_x;y=status.mouse_y}]
