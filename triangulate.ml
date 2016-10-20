@@ -45,6 +45,17 @@ module Line = struct
 end
 
 module Points2D = struct
+
+  (* compute the bounds of a set of points, as a point *)
+  let bounds points =
+    let max_x = ref 0 in
+    let max_y = ref 0 in
+    List.iter
+      Point.(fun p ->
+          if p.x > !max_x then max_x := p.x;
+          if p.y > !max_y then max_y := p.y)
+      points;
+    (!max_x + 10), (!max_y + 10)
   
   (* triangulate all the points *)
   let triangulate points =
@@ -61,7 +72,8 @@ module Points2D = struct
       List.fold_left
         (fun accum p2 ->
            let new_line = Line.{a=p;b=p2} in
-           if p <> p2 && not (List.exists (Line.overlaps new_line) accum) then
+           let check_overlap = Line.overlaps new_line in
+           if p <> p2 && not (List.exists check_overlap accum) then
              new_line :: accum
            else
              accum)
@@ -88,24 +100,10 @@ module Canvas = struct
   (* A drawing surface *)
 end
 
-(* util *)
-
-(* busy loop *)
-let idle () = 
-  while true do
-    ignore ()
-  done
-
 (* build config string based on max_x/max_y of all points *)
 let suggest_bounds points =
-  let max_x = ref 0 in
-  let max_y = ref 0 in
-  List.iter
-    Point.(fun p ->
-        if p.x > !max_x then max_x := p.x;
-        if p.y > !max_y then max_y := p.y)
-    points;
-  Printf.sprintf " %dx%d" (!max_x + 10) (!max_y + 10)
+  let (x, y) = Points2D.bounds points in
+  Printf.sprintf " %dx%d" (x + 10) (y + 10)
 
 (* main entry point *)
 let run () =
